@@ -11,6 +11,19 @@ SET(CMAKE_CXX_STANDARD 20)
 SET(CMAKE_CXX_STANDARD_REQUIRED ON)
 SET(CMAKE_CXX_EXTENSIONS OFF)
 
+# Set the build type (Release or Debug)
+IF(NOT CMAKE_BUILD_TYPE)
+    SET(CMAKE_BUILD_TYPE Release)
+ENDIF()
+
+# Set compiler flags for different build types
+IF(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    SET(EXECUTABLE_NAME "program_debug")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
+ELSE()
+    SET(EXECUTABLE_NAME "program")
+ENDIF()
+
 SET(SRC_DIR ${CMAKE_SOURCE_DIR}/src)
 SET(UNIT_TEST_DIR ${CMAKE_SOURCE_DIR}/test/unit)
 SET(INC_DIR ${CMAKE_SOURCE_DIR}/include)
@@ -36,10 +49,9 @@ INCLUDE_DIRECTORIES(${INC_DIR}/lib)
 ADD_LIBRARY(MandandoBemNoSk8 ${PROGRAM})
 
 # Make executables
-ADD_EXECUTABLE(program ${PROGRAM})
+ADD_EXECUTABLE(${EXECUTABLE_NAME} ${PROGRAM})
 ADD_EXECUTABLE(unit_test ${UNIT_TESTS})
 
 # Link libs
 TARGET_LINK_LIBRARIES(MandandoBemNoSk8 DataStructures)
 TARGET_LINK_LIBRARIES(unit_test MandandoBemNoSk8)
-# TARGET_LINK_LIBRARIES(mylibname ModuleX)
