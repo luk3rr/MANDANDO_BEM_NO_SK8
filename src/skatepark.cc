@@ -8,33 +8,26 @@
 #include "skatepark_section.h"
 #include "trick.h"
 #include "vector.h"
+#include <bitset>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <math.h>
+#include <string>
+#include <vector>
 
 SkatePark::SkatePark()
 {
-    // Allocate memory for the cache and initialize all cells as infinity
-    this->m_cache.Resize(MAX_TRICKS + 1, Vector<int64_t>(MAX_SECTIONS + 1));
+    this->m_score.Resize(COMBINATIONS,
+                         Vector<int64_t>(COMBINATIONS, NEGATIVE_INFINITY));
 
-    for (std::size_t i = 0; i < this->m_cache.GetMaxSize(); i++)
-    {
-        for (std::size_t j = 0; j < this->m_cache[i].GetMaxSize(); j++)
-        {
-            this->m_cache[i][j] = NEGATIVE_INFINITY;
-        }
-    }
+    this->m_mostRadicalTrick.Resize(MAX_SECTIONS,
+                                    Vector<int64_t>(COMBINATIONS, NEGATIVE_INFINITY));
 
-    // Initilize vector of vectors
-    this->m_tricksInSections.Resize(MAX_SECTIONS, Vector<bool>(MAX_TRICKS));
-
-    for (std::size_t i = 0; i < this->m_tricksInSections.GetMaxSize(); i++)
-    {
-        for (std::size_t j = 0; j < this->m_tricksInSections[i].GetMaxSize(); j++)
-        {
-            this->m_tricksInSections[i][j] = false;
-        }
-    }
+    this->m_tricksPerSections.Resize(MAX_SECTIONS, 0);
+    this->m_trickPermutations.Resize(COMBINATIONS, Vector<uint16_t>());
+    this->m_trickDurations.Resize(COMBINATIONS, NEGATIVE_INFINITY);
 }
 
 SkatePark::~SkatePark() { }
@@ -49,112 +42,194 @@ void SkatePark::AddSection(uint16_t sectionBonus, uint32_t sectionTraversalTime)
     this->m_sections.PushBack(Section(sectionBonus, sectionTraversalTime));
 }
 
-// Função para calcular o resultado máximo usando programação dinâmica e memoização
-int64_t SkatePark::CalculateMaxScore(uint16_t trickID, uint16_t sectionID)
+void SkatePark::StoreScore(uint16_t currentTrick, uint16_t previousTrick)
 {
+    uint16_t repeated = currentTrick & previousTrick;
+    int64_t  points   = 0;
 
-    // Verifique se o resultado já foi calculado
-    // Se todas as tricks tiverem o tempo de execução > do que o tempo de travesia
-    // de uma seção, isso vai da problema, pois o valor será == 0.
-    if (this->m_cache[trickID][sectionID] != NEGATIVE_INFINITY)
+    for (uint16_t i = 0; i < MAX_TRICKS; i++)
     {
-        return this->m_cache[trickID][sectionID];
+        if (repeated >> i & BIT_MASK_ONE)
+        {
+            points += this->m_tricks[i].GetScore() >> BIT_MASK_ONE;
+        }
+        else if (currentTrick >> i & BIT_MASK_ONE)
+        {
+            points += this->m_tricks[i].GetScore();
+        }
     }
 
-    // Caso base: se não há mais manobras ou seções
-    if (trickID == this->m_tricks.Size() or sectionID == this->m_sections.Size())
+    if (DEBUG)
     {
-        return 0;
+        std::cout << "\ncurr_d\t=\t" << currentTrick << "\tcurr_b\t=\t"
+                  << std::bitset<16>(currentTrick) << "\nprev_d\t=\t" << previousTrick
+                  << "\tprev_b\t=\t" << std::bitset<16>(previousTrick)
+                  << "\nrrrr_d\t=\t" << repeated << "\trrrr_b\t=\t"
+                  << std::bitset<16>(repeated) << "\ntotal score: " << points
+                  << std::endl;
     }
 
-    // Verifique se a manobra atual pode ser realizada na seção atual
-    if (this->m_tricks[trickID].GetExecutionTime() <=
-            this->m_sections[sectionID].GetAvailableTraversalTime() and
-        not this->m_tricksInSections[sectionID][trickID])
-    {
-        // resultado máximo entre escolher ou não escolher a manobra atual
-        int64_t chooseTrick = this->m_tricks[trickID].GetScore() *
-                                  this->m_sections[sectionID].GetBonus() +
-                              CalculateMaxScore(trickID, sectionID + 1);
-
-        int64_t skipTrick = CalculateMaxScore(trickID, sectionID + 1);
-
-        // Se a trick foi realizada na seção anterior
-        if (sectionID > 0 and this->m_tricksInSections[sectionID - 1][trickID])
-        {
-            chooseTrick /= 2;
-        }
-
-        // Se a trick foi realizada na seção anterior
-        if (sectionID > 0 and this->m_tricksInSections[sectionID - 1][trickID])
-        {
-            skipTrick /= 2;
-        }
-
-        if (chooseTrick == skipTrick)
-        {
-            std::cout << "WARNING: Tricks with the same score" << std::endl;
-        }
-
-        if (skipTrick > chooseTrick)
-        {
-            // Atualize a tabela de memoização
-            this->m_cache[trickID][sectionID] = skipTrick;
-        }
-        else
-        {
-            // Atualize a tabela de memoização
-            this->m_cache[trickID][sectionID] = chooseTrick;
-        }
-    }
-    else
-    {
-        // Se a manobra não pode ser realizada na seção atual, pule para a próxima
-        // manobra
-        int64_t skipTrick = CalculateMaxScore(trickID + 1, sectionID);
-
-        this->m_cache[trickID][sectionID] = skipTrick;
-    }
-
-    // Atualizar tempo disponível nessa seção
-    this->m_sections[sectionID].UpdateAvailableTraversalTime(
-        this->m_tricks[trickID].GetExecutionTime());
-
-    // Define que a manobra foi feita nessa seção
-    this->m_tricksInSections[sectionID][trickID] = true;
-    return this->m_cache[trickID][sectionID];
+    this->m_score[currentTrick][previousTrick] = points;
 }
 
-int64_t SkatePark::GetMaxScore()
+bool SkatePark::IsTimeWithinSectionLimit(uint16_t section, uint16_t trickSet)
 {
-    if (this->m_sections.IsEmpty() or this->m_tricks.IsEmpty())
+    uint32_t sectionTime = this->m_sections[section].GetTraversalTime();
+
+    if (this->m_trickDurations[trickSet] != NEGATIVE_INFINITY)
+    {
+        return this->m_trickDurations[trickSet] <= sectionTime;
+    }
+
+    int64_t trickSetTime = 0;
+
+    for (uint16_t i = 0; i < MAX_TRICKS; i++)
+    {
+        if (trickSet >> i & BIT_MASK_ONE)
+        {
+            trickSetTime += this->m_tricks[i].GetExecutionTime();
+        }
+    }
+
+    this->m_trickDurations[trickSet] = trickSetTime;
+
+    return trickSetTime <= sectionTime;
+}
+
+void SkatePark::GenerateTrickPermutations()
+{
+    for (uint16_t i = 0; i < std::pow(2, this->m_tricks.Size()); i++)
+    {
+        for (uint16_t j = 0; j < MAX_TRICKS; j++)
+        {
+            if (i >> j & BIT_MASK_ONE)
+            {
+                this->m_trickPermutations[i].PushBack(j);
+            }
+        }
+    }
+}
+
+int64_t SkatePark::FindMostRadicalTrick(uint16_t section, uint16_t trickSet)
+{
+    // Caso base: As seções acabaram
+    if (section > this->m_sections.Size() - 1)
     {
         return 0;
     }
 
-    int64_t max = 0;
-
-    for (std::size_t i = 0; i < this->m_sections.Size(); i++)
+    // Se o valor já foi calculado, utilize o armazenado na tabela
+    if (this->m_mostRadicalTrick[section][trickSet] != NEGATIVE_INFINITY)
     {
-        max += CalculateMaxScore(0, i);
+        return this->m_mostRadicalTrick[section][trickSet];
     }
 
-    return max;
+    int64_t max              = NEGATIVE_INFINITY;
+    int16_t mostRadicalTrick = 0;
+
+    int64_t  aux;
+    uint16_t numTricksInThisSection;
+
+    for (uint16_t i = 0; i < COMBINATIONS; i++)
+    {
+        // Verifica se o conjunto de manobras 'i' pode ser realizado na seção 'section'
+        if (not IsTimeWithinSectionLimit(section, i))
+            continue;
+
+        // Verifica se a pontuação do conjunto de manobras 'i' dado que fizemos a
+        // manobra 'trickSet' na seção anterior já foi calculado
+        if (this->m_score[i][trickSet] == NEGATIVE_INFINITY)
+        {
+            StoreScore(i, trickSet);
+        }
+
+        numTricksInThisSection = this->m_trickPermutations[i].Size();
+
+        aux = FindMostRadicalTrick(section + 1, i) +
+              this->m_score[i][trickSet] * this->m_sections[section].GetBonus() *
+                  numTricksInThisSection;
+
+        if (aux > max)
+        {
+            max              = aux;
+            mostRadicalTrick = i;
+        }
+    }
+
+    this->m_tricksPerSections[section]          = mostRadicalTrick;
+    this->m_mostRadicalTrick[section][trickSet] = max;
+
+    return this->m_mostRadicalTrick[section][trickSet];
+}
+
+int64_t SkatePark::FindMostFuckingRadicalTrick()
+{
+    GenerateTrickPermutations();
+
+    FindMostRadicalTrick(0, 0);
+
+    return this->m_mostRadicalTrick[0][0];
 }
 
 void SkatePark::ShowTricksList()
 {
+    uint32_t    aux;
+    std::string set;
+
+    for (uint16_t i = 0; i < this->m_sections.Size(); i++)
+    {
+        aux = 0;
+        set.clear();
+
+        std::cout << this->m_tricksPerSections[i] << "\t"
+                  << std::bitset<16>(this->m_tricksPerSections[i]) << "\t";
+
+        for (uint16_t j = 0; j < MAX_TRICKS; j++)
+        {
+            if (this->m_tricksPerSections[i] >> j & BIT_MASK_ONE)
+            {
+                aux++;
+                set += std::to_string(j + 1) + " ";
+            }
+        }
+
+        std::cout << aux << " " << set.substr(0, set.size() - 1) << std::endl;
+    }
+}
+
+void SkatePark::DumpMatrices()
+{
+
+    std::cout << "\n## Points Matrix (m x m') ##" << std::endl;
+
+    for (std::size_t i = 0; i < COMBINATIONS; i++)
+    {
+        if (this->m_score[i][0] == NEGATIVE_INFINITY)
+            break;
+        std::cout << i << " | ";
+        for (std::size_t j = 0; j < COMBINATIONS; j++)
+        {
+            if (this->m_score[i][j] == NEGATIVE_INFINITY)
+                break;
+
+            std::cout << this->m_score[i][j] << "\t";
+        }
+        std::cout << std::endl;
+    }
+
+    std::cout << "## Score (sections x m')" << std::endl;
     for (std::size_t i = 0; i < this->m_sections.Size(); i++)
     {
-        // show section id
-        std::cout << i + 1 << " ";
-        for (std::size_t j = 0; j < this->m_tricks.Size(); j++)
+        if (this->m_mostRadicalTrick[i][0] == NEGATIVE_INFINITY)
+            break;
+
+        std::cout << i << " | ";
+        for (std::size_t j = 0; j < COMBINATIONS; j++)
         {
-            // Show trick if it has performed in this section
-            if (this->m_tricksInSections[i][j])
-            {
-                std::cout << j + 1 << " ";
-            }
+            if (this->m_mostRadicalTrick[i][j] == NEGATIVE_INFINITY)
+                break;
+
+            std::cout << this->m_mostRadicalTrick[i][j] << "\t";
         }
         std::cout << std::endl;
     }

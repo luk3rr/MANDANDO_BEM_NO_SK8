@@ -2,6 +2,9 @@
 bin/program*
 bin/unit_test
 
+# log file
+*.log
+
 # OBJ file
 *.o
 

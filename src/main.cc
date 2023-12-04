@@ -5,6 +5,7 @@
  */
 
 #include "skatepark.h"
+#include "vector.h"
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
@@ -32,8 +33,7 @@ int main(int argc, char* argv[])
         sk8Park.AddTrick(trickScore, trickExecutionTime);
     }
 
-    std::cout << sk8Park.GetMaxScore() << std::endl;
-
+    std::cout << sk8Park.FindMostFuckingRadicalTrick() << std::endl;
     sk8Park.ShowTricksList();
 
     return EXIT_SUCCESS;

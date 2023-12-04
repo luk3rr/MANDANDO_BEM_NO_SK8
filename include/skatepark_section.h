@@ -15,10 +15,8 @@
 class Section
 {
     private:
-        uint16_t  m_bonus;                  ///< Bonus associated with the section
+        uint16_t m_bonus;                  ///< Bonus associated with the section
         uint32_t m_traversalTime;          ///< Traversal time for the section
-        uint32_t m_availableTraversalTime; ///< Available traversal time in the section
-                                           ///< after maneuvers
 
     public:
         /**
@@ -31,7 +29,7 @@ class Section
          * @param bonus Bonus value for the section
          * @param traversalTime Traversal time for the section in seconds
          */
-        Section(int8_t bonus, uint32_t traversalTime);
+        Section(int16_t bonus, uint32_t traversalTime);
 
         /**
          * @brief Destructor for the Section class
@@ -54,25 +52,13 @@ class Section
          * @brief Get the bonus of the section
          * @return The bonus of the section
          */
-        int8_t GetBonus();
+        int16_t GetBonus();
 
         /**
          * @brief Get the traversal time of the section
          * @return The traversal time of the section in seconds
          */
         uint32_t GetTraversalTime();
-
-        /**
-         * @brief Get the available traversal time in the section after maneuvers
-         * @return The available traversal time in seconds
-         */
-        uint32_t GetAvailableTraversalTime();
-
-        /**
-         * @brief Update the available traversal time in the section after maneuvers
-         * @param timeSpent Time spent on maneuvers in the section
-         */
-        void UpdateAvailableTraversalTime(uint32_t timeSpent);
 };
 
 #endif // SKATEPARK_SECTION_H_
