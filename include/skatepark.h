@@ -49,7 +49,7 @@ class SkatePark
             m_trickDurations; ///< Stores the total duration of the set of tricks i
 
         // Set of tricks performed in each section
-        Vector<uint16_t> m_tricksPerSections;
+        Vector<Vector<uint16_t>> m_tricksPerSections;
 
         /**
          * @brief Given that we performed the trick set 'previousTrick' in the previous

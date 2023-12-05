@@ -25,7 +25,7 @@ SkatePark::SkatePark()
     this->m_mostRadicalTrick.Resize(MAX_SECTIONS,
                                     Vector<int64_t>(COMBINATIONS, NEGATIVE_INFINITY));
 
-    this->m_tricksPerSections.Resize(MAX_SECTIONS, 0);
+    this->m_tricksPerSections.Resize(MAX_SECTIONS, Vector<uint16_t>(COMBINATIONS, 0));
     this->m_trickPermutations.Resize(COMBINATIONS, Vector<uint16_t>());
     this->m_trickDurations.Resize(COMBINATIONS, NEGATIVE_INFINITY);
 }
@@ -51,7 +51,7 @@ void SkatePark::StoreScore(uint16_t currentTrick, uint16_t previousTrick)
     {
         if (repeated >> i & BIT_MASK_ONE)
         {
-            points += this->m_tricks[i].GetScore() >> BIT_MASK_ONE;
+            points += this->m_tricks[i].GetScore() / 2; // shift 1 não trunca
         }
         else if (currentTrick >> i & BIT_MASK_ONE)
         {
@@ -156,8 +156,8 @@ int64_t SkatePark::FindMostRadicalTrick(uint16_t section, uint16_t trickSet)
         }
     }
 
-    this->m_tricksPerSections[section]          = mostRadicalTrick;
-    this->m_mostRadicalTrick[section][trickSet] = max;
+    this->m_tricksPerSections[section][trickSet] = mostRadicalTrick;
+    this->m_mostRadicalTrick[section][trickSet]  = max;
 
     return this->m_mostRadicalTrick[section][trickSet];
 }
@@ -173,26 +173,25 @@ int64_t SkatePark::FindMostFuckingRadicalTrick()
 
 void SkatePark::ShowTricksList()
 {
-    uint32_t    aux;
+    uint16_t    spell = 0;
+    uint16_t    aux;
     std::string set;
 
-    for (uint16_t i = 0; i < this->m_sections.Size(); i++)
+    for (std::size_t i = 0; i < this->m_sections.Size(); i++)
     {
+        spell = this->m_tricksPerSections[i][spell];
+
         aux = 0;
         set.clear();
 
-        std::cout << this->m_tricksPerSections[i] << "\t"
-                  << std::bitset<16>(this->m_tricksPerSections[i]) << "\t";
-
         for (uint16_t j = 0; j < MAX_TRICKS; j++)
         {
-            if (this->m_tricksPerSections[i] >> j & BIT_MASK_ONE)
+            if (spell >> j & BIT_MASK_ONE)
             {
                 aux++;
                 set += std::to_string(j + 1) + " ";
             }
         }
-
         std::cout << aux << " " << set.substr(0, set.size() - 1) << std::endl;
     }
 }
