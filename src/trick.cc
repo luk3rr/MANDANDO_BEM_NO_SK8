@@ -5,7 +5,6 @@
  */
 
 #include "trick.h"
-#include <cstdint>
 
 Trick::Trick()
 {

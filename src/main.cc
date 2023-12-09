@@ -4,14 +4,14 @@
  * Author: Lucas Araújo <araujolucas@dcc.ufmg.br>
  */
 
-#include "skatepark.h"
-#include "vector.h"
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
 #include <iostream>
 
-int main(int argc, char* argv[])
+#include "skatepark.h"
+
+int main()
 {
     uint16_t numSections, numTricks, sectionBonus;
     uint32_t sectionTraversalTime, trickExecutionTime;

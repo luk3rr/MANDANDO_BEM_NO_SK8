@@ -5,20 +5,10 @@
  */
 
 #include "skatepark.h"
-#include "skatepark_section.h"
-#include "trick.h"
-#include "vector.h"
-#include <bitset>
-#include <cmath>
-#include <cstddef>
-#include <cstdint>
-#include <cstring>
-#include <math.h>
-#include <string>
-#include <vector>
 
 SkatePark::SkatePark()
 {
+    // Initialize vectors and matrices
     this->m_score.Resize(COMBINATIONS,
                          Vector<int64_t>(COMBINATIONS, NEGATIVE_INFINITY));
 
@@ -51,22 +41,12 @@ void SkatePark::StoreScore(uint16_t currentTrick, uint16_t previousTrick)
     {
         if (repeated >> i & BIT_MASK_ONE)
         {
-            points += this->m_tricks[i].GetScore() / 2; // shift 1 não trunca
+            points += this->m_tricks[i].GetScore() / 2;
         }
         else if (currentTrick >> i & BIT_MASK_ONE)
         {
             points += this->m_tricks[i].GetScore();
         }
-    }
-
-    if (DEBUG)
-    {
-        std::cout << "\ncurr_d\t=\t" << currentTrick << "\tcurr_b\t=\t"
-                  << std::bitset<16>(currentTrick) << "\nprev_d\t=\t" << previousTrick
-                  << "\tprev_b\t=\t" << std::bitset<16>(previousTrick)
-                  << "\nrrrr_d\t=\t" << repeated << "\trrrr_b\t=\t"
-                  << std::bitset<16>(repeated) << "\ntotal score: " << points
-                  << std::endl;
     }
 
     this->m_score[currentTrick][previousTrick] = points;
@@ -112,13 +92,13 @@ void SkatePark::GenerateTrickPermutations()
 
 int64_t SkatePark::FindMostRadicalTrick(uint16_t section, uint16_t trickSet)
 {
-    // Caso base: As seções acabaram
+    // Base case: No more sections
     if (section > this->m_sections.Size() - 1)
     {
         return 0;
     }
 
-    // Se o valor já foi calculado, utilize o armazenado na tabela
+    // If the value has already been calculated, use the one stored in the table instead
     if (this->m_mostRadicalTrick[section][trickSet] != NEGATIVE_INFINITY)
     {
         return this->m_mostRadicalTrick[section][trickSet];
@@ -132,12 +112,12 @@ int64_t SkatePark::FindMostRadicalTrick(uint16_t section, uint16_t trickSet)
 
     for (uint16_t i = 0; i < COMBINATIONS; i++)
     {
-        // Verifica se o conjunto de manobras 'i' pode ser realizado na seção 'section'
+        // Check if the trick set 'i' can be performed in section 'section'
         if (not IsTimeWithinSectionLimit(section, i))
             continue;
 
-        // Verifica se a pontuação do conjunto de manobras 'i' dado que fizemos a
-        // manobra 'trickSet' na seção anterior já foi calculado
+        // Check if the score for the trick set 'i' given that we performed the trick
+        // 'trickSet' in the previous section has already been calculated
         if (this->m_score[i][trickSet] == NEGATIVE_INFINITY)
         {
             StoreScore(i, trickSet);
@@ -156,6 +136,7 @@ int64_t SkatePark::FindMostRadicalTrick(uint16_t section, uint16_t trickSet)
         }
     }
 
+    // Store the most radical trick set for this section
     this->m_tricksPerSections[section][trickSet] = mostRadicalTrick;
     this->m_mostRadicalTrick[section][trickSet]  = max;
 

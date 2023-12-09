@@ -7,12 +7,13 @@
 #ifndef SKATEPARK_H_
 #define SKATEPARK_H_
 
-#include "skatepark_section.h"
-#include "trick.h"
-#include "vector.h"
 #include <cmath>
 #include <cstdint>
 #include <limits>
+
+#include "section.h"
+#include "trick.h"
+#include "vector.h"
 
 constexpr uint16_t MAX_TRICKS   = 1e1;
 constexpr uint16_t MAX_SECTIONS = 1e2;
@@ -21,8 +22,6 @@ constexpr int64_t NEGATIVE_INFINITY = std::numeric_limits<int64_t>::min();
 const uint16_t    COMBINATIONS      = std::pow(2, MAX_TRICKS);
 
 constexpr uint16_t BIT_MASK_ONE = 0x0001; // 0000000000000001
-
-constexpr bool DEBUG = false;
 
 /**
  * @brief Class representing a Skate Park with tricks, sections, and a memoization table

@@ -15,8 +15,8 @@
 class Section
 {
     private:
-        uint16_t m_bonus;                  ///< Bonus associated with the section
-        uint32_t m_traversalTime;          ///< Traversal time for the section
+        uint16_t m_bonus;         ///< Bonus associated with the section
+        uint32_t m_traversalTime; ///< Traversal time for the section
 
     public:
         /**

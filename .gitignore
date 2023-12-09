@@ -1,9 +1,6 @@
 # EXE
-bin/program*
+bin/program
 bin/unit_test
-
-# log file
-*.log
 
 # OBJ file
 *.o
@@ -25,3 +22,5 @@ CTestTestfile.cmake
 _deps
 build/**/Makefile
 build/libs/*
+build/**/*
+bin/**/*

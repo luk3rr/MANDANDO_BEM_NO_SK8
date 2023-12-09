@@ -4,9 +4,7 @@
  * Author: Lucas Araújo <araujolucas@dcc.ufmg.br>
  */
 
-#include "skatepark_section.h"
-#include <cstdint>
-#include <stdexcept>
+#include "section.h"
 
 Section::Section()
 {
@@ -15,8 +13,8 @@ Section::Section()
 
 Section::Section(int16_t bonus, uint32_t traversalTime)
 {
-    this->m_bonus                  = bonus;
-    this->m_traversalTime          = traversalTime;
+    this->m_bonus         = bonus;
+    this->m_traversalTime = traversalTime;
 }
 
 Section::~Section() { }
