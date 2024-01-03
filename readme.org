@@ -1,1 +1,48 @@
-* SKELETON
+* MANDANDO_BEM_NO_SK8
+"MANDANDO_BEM_NO_SK8" is a program that uses dynamic programming to find the set of tricks in a skate track that will provide the most points. This program is the product of a practical activity of the discipline of Algorithms I of the [[https://dcc.ufmg.br/][Department of Computer Science at UFMG]].
+
+* Table of Contents
++ [[#Problems][Problems]]
++ [[#Solutions][Solutions]]
++ [[#Compiling][Compiling]]
++ [[#Execution][Execution]]
++ [[#Input][Input]]
++ [[#Output][Output]]
++ [[#Documentation][Documentation]]
+
+* Problems
+A track has $N$ sections where sequences of maneuvers can be performed, with each section having a bonus factor $c_{i}$ and a crossing time $l_{i}$.
+
+Exists only $K$ maneuvers allowed on the track, with each one having duration $t_{j}$ and a base score $p_{j}$.
+
+A maneuver can be performed at most once in each section of the track. If a maneuver is done in two consecutive sections, its score is reduced to $\lfloor p_{j}/2 \rfloor$.
+
+Given these conditions, what is the sequence of maneuvers that will produce the most points?
+* Solutions
+For the solution of the proposed problem, we employ the dynamic programming paradigm, since we need to calculate the maximum score we can obtain in a section given that we perform a certain set of maneuvers in the previous section. In addition, many of the calculations made throughout the solution may be needed at different times, which makes the use of dynamic programming essential to reduce the execution time of the program.
+
+* Compiling
+This program can be compiled using the following command:
+
+#+BEGIN_SRC sh
+$ ./run --build
+#+END_SRC
+
+NOTE: The program was developed and tested using g++12. Make sure to use this compiler version.
+
+* Execution
+The execution can be performed both by the python script: =./run --exec=
+
+as well as by the direct execution of the executable: =bin/Release/program=
+
+* Input
+The first line contains two integers, $N$ and $K$, which represent, respectively, the number of sections of the track and the number of maneuvers cataloged, such that $1 \le N \le 100$ and $1 \le K \le 10$.
+
+The next $N$ lines describe the sections of the track. Each $i$-th of these lines contains the integers $c_{i}$ (bonus factor of section $i$) and $l_{i}$ (crossing time of section $i$), such that $1 \le c_{i} \le 100$ and $1 \le l_{i} \le 10^{6}$.
+
+As follows, we have $K$ lines, each describing a maneuver. Each $j$-th of these lines contains the integers $p_{j}$ (base score of maneuver $j$) and $t_{j}$ (duration time of maneuver $j$), such that $1 \le p_{j} \le 100$ and $1 \le t_{j} \le 10^{6}$.
+* Output
+The output consists in multiples lines. The first line contains the maximum score that can be obtained in the track. As follows, we have $N$ lines, each containing one integer $n_{i}$ representing the number of the maneuver performed in the $i$-th section of the track. Right away, $n_{i}$ integers are printed, representing the maneuvers performed in the $i$-th section of the track.
+
+* Documentation
+The statement for this assignment can be read [[https://github.com/luk3rr/MANDANDO_BEM_NO_SK8/tree/main/docs][here]].
